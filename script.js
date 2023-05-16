@@ -3,8 +3,8 @@ const CTX = CANVAS.getContext('2d');
 
 const SCOREEL = document.querySelector('#scoreEl');
 
-CANVAS.width = innerWidth - innerWidth/10;
-CANVAS.height = innerHeight - innerHeight/10;
+CANVAS.width = 21 * 40; //innerWidth - innerWidth/10;
+CANVAS.height = 14 * 40; //innerHeight - innerHeight/10;
 
 class Boundary {
     static width = 40;
@@ -52,13 +52,14 @@ class Ghost {
         this.radius = 15;
         this.color = color;
         this.prevCollisions = [];
-        this.speed = 2
+        this.speed = 2;
+        this.scared = false
     }
 
     draw() {
         CTX.beginPath();
         CTX.arc(this.position.x, this.position.y, this.radius, 0, Math.PI*2);
-        CTX.fillStyle = this.color;
+        CTX.fillStyle = this.scared? 'grey' : this.color;
         CTX.fill();
         CTX.closePath();
     }
@@ -85,8 +86,24 @@ class Pellet {
     }
 }
 
+class PowerUp {
+    constructor({position}) {
+        this.position = position;
+        this.radius = 9;
+    }
+
+    draw() {
+        CTX.beginPath();
+        CTX.arc(this.position.x,this.position.y, this.radius, 0, Math.PI*2);
+        CTX.fillStyle = 'aquamarine';
+        CTX.fill();
+        CTX.closePath();
+    }
+}
+
 const PELLETS = [];
 const BOUNDARIES = [];
+const POWERUPS = [];
 const GHOSTS = [
     new Ghost({
         position: {
@@ -123,8 +140,8 @@ const GHOSTS = [
 ];
 const PLAYER = new Player({
     position: {
-        x: Boundary.width + Boundary.width / 2, 
-        y: Boundary.height + Boundary.height / 2
+        x: Boundary.width * 10 + Boundary.width / 2, 
+        y: Boundary.height * 6 + Boundary.height / 2
     }, 
     velocity: {
         x: 0,
@@ -148,7 +165,7 @@ const KEYS = {
 
 const MAP = [
     ['1','-','-','-','-','-','-','-','-','-','/','-','-','-','/','-','-','-','/','/','2'],
-    ['|','.','.','.','.','.','.','.','.','.','|','.','.','.','u','.','.','.','4','_','6'],
+    ['|','*','.','.','.','.','.','.','.','.','|','*','.','.','u','.','.','.','4','_','6'],
     ['|','.','b','.','^','.','b','.','b','.','|','.','^','.','.','.','^','.','.','.','|'],
     ['|','.','.','.','|','.','.','.','.','.','|','.','4',']','.','[','_','-','2','.','|'],
     ['|','.','[','-','+',']','.','[',']','.','u','.','.','.','.','.','.','.','u','.','|'],
@@ -159,7 +176,7 @@ const MAP = [
     ['|','.','u','.','|','.','b','.','u','.','|','.','u','.','^','.','u','.','u','.','|'],
     ['|','.','.','.','u','.','.','.','.','.','|','.','.','.','|','.','.','.','.','.','|'],
     ['|','.','b','.','.','.','[','-',']','.','4','-','-','-','_','-',']','.','b','.','|'],
-    ['|','.','.','.','^','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','|'],
+    ['|','*','.','.','^','.','.','.','.','.','.','.','.','.','.','.','.','.','.','*','|'],
     ['4','-','-','-','_','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','3']
 ];
 
@@ -324,6 +341,14 @@ MAP.forEach((row, i) => {
                     }
                 }))
                 break;
+            case '*':
+                POWERUPS.push(new PowerUp ({
+                    position: {
+                        x:Boundary.width * j + Boundary.width/2,
+                        y:Boundary.height * i + Boundary.height/2
+                    }
+                }))
+                break;
         }
     })
 });
@@ -410,7 +435,46 @@ function animate(){
         }
     }
 
-    for(let i = PELLETS.length - 1; 0 < i; i--) {
+    for(let i = GHOSTS.length - 1; 0 <= i; i--) {
+        const ghost = GHOSTS[i];
+        if (
+            Math.hypot(
+                ghost.position.x - PLAYER.position.x,
+                ghost.position.y - PLAYER.position.y
+            ) < ghost.radius + PLAYER.radius) {
+                if(ghost.scared){
+                    GHOSTS.splice(i, 1);
+                    score += 100;
+                    SCOREEL.innerHTML = score;
+                } else {
+                    cancelAnimationFrame(animationId);
+                    alert('you lose');
+                }
+            }
+    }
+    for(let i = POWERUPS.length - 1; 0 <= i; i--) {
+        const powerUp = POWERUPS[i];
+        powerUp.draw();
+
+        if (
+            Math.hypot(
+                powerUp.position.x - PLAYER.position.x,
+                powerUp.position.y - PLAYER.position.y
+            ) < powerUp.radius + PLAYER.radius) {
+                POWERUPS.splice(i, 1);
+                GHOSTS.forEach(ghost => {
+                    ghost.scared = true;
+                    console.log(ghost.scared);
+                    setTimeout(() => {
+                        ghost.scared = false;
+                        console.log(ghost.scared);
+                    }, 5000);
+                })
+            }
+        
+    }
+
+    for(let i = PELLETS.length - 1; 0 <= i; i--) {
         const pellet = PELLETS[i]
 
         pellet.draw();
@@ -442,15 +506,6 @@ function animate(){
 
     GHOSTS.forEach((ghost => {
         ghost.update();
-
-        if (
-            Math.hypot(
-                ghost.position.x - PLAYER.position.x,
-                ghost.position.y - PLAYER.position.y
-            ) < ghost.radius + PLAYER.radius) {
-                cancelAnimationFrame(animationId);
-                alert('you lose');
-            }
 
         const COLLISIONS = [];
 
