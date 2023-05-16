@@ -1,4 +1,11 @@
 body {
-    margin: 0;
+    padding-left: 8px;
     background-color: black;
+}
+
+.score {
+    padding-left: 40px;
+    font-family: "Press Start 2P", "Press Start", cursive;
+    color:gold;
+    font-size: 20px;
 }
