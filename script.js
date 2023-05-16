@@ -7,16 +7,15 @@ CANVAS.height = innerHeight-5;
 class Boundary {
     static width = 40;
     static height = 40;
-    constructor ({position}) {
+    constructor ({position, image}) {
         this.position = position;
         this.width = 40;
         this.height = 40;
+        this.image = image;
     }
 
     draw() {
-        CTX.fillStyle = 'blue';
-        CTX.fillRect(this.position.x, this.position.y, this.width, this.height)
-
+        CTX.drawImage(this.image, this.position.x, this.position.y)
     }
 }
 
@@ -62,17 +61,28 @@ const KEYS = {
     }
 };
 
-let lastKey = '';
-
 const MAP = [
-    ['-','-','-','-','-','-','-'],
-    ['-',' ',' ',' ',' ',' ','-'],
-    ['-',' ','-',' ','-',' ','-'],
-    ['-',' ',' ',' ',' ',' ','-'],
-    ['-',' ','-',' ','-',' ','-'],
-    ['-',' ',' ',' ',' ',' ','-'],
-    ['-','-','-','-','-','-','-']
+    ['1','-','-','-','-','-','-','-','-','-','/','-','-','-','-','-','-','/','/','-','2'],
+    ['|','.','.','.','.','.','.','.','.','.','|','.','.','.','.','.','.','4','3','.','|'],
+    ['|','.','b','.','^','.','b','.','b','.','|','.','1','2','.','^','.','.','.','.','|'],
+    ['|','.','.','.','|','.','.','.','.','.','|','.','4','3','.','4','-','-','2','.','|'],
+    ['|','.','[','-','+',']','.','[',']','.','u','.','.','.','.','.','.','.','u','.','|'],
+    ['|','.','.','.','u','.','.','.','.','.','.','.','^','.','b','.','^','.','.','.','|'],
+    ['|','.','b','.','.','.','1',']','.','b','.','[','6','.','.','.','4',']','.','[','6'],
+    ['|','.','.','.','^','.','u','.','.','.','.','.','|','.','b','.','.','.','.','.','|'],
+    ['|','.','^','.','|','.','.','.','^','.','^','.','|','.','.','.','1','/','2','.','|'],
+    ['|','.','u','.','|','.','b','.','u','.','|','.','u','.','b','.','4','_','3','.','|'],
+    ['|','.','.','.','u','.','.','.','.','.','|','.','.','.','.','.','.','.','.','.','|'],
+    ['|','.','b','.','.','.','[','-',']','.','4','-','-','-','-','-',']','.','b','.','|'],
+    ['|','.','.','.','^','.','.','.','.','.','.','.','.','.','.','.','.','.','.','.','|'],
+    ['4','-','-','-','_','-','-','-','-','-','-','-','-','-','-','-','-','-','-','-','3']
 ];
+
+function createImage(src){
+    const image = new Image();
+    image.src = src;
+    return image;
+}
 
 MAP.forEach((row, i) => {
     row.forEach((symbol, j) => {
@@ -82,7 +92,143 @@ MAP.forEach((row, i) => {
                     position:{
                         x:Boundary.width*j,
                         y:Boundary.height*i
-                    }
+                    },
+                    image: createImage('./img/pipeHorizontal.png')
+                }))
+                break;
+            case '|':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeVertical.png')
+                }))
+                break;
+            case '1':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeCorner1.png')
+                }))
+                break;
+            case '2':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeCorner2.png')
+                }))
+                break;
+            case '3':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeCorner3.png')
+                }))
+                break;
+            case '4':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeCorner4.png')
+                }))
+                break;
+            case '5':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeConnectorRight.png')
+                }))
+                break;
+            case '6':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeConnectorLeft.png')
+                }))
+                break;
+            case 'b':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/block.png')
+                }))
+                break;
+            case '+':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeCross.png')
+                }))
+                break;
+            case '^':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/capTop.png')
+                }))
+                break;
+            case '[':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/capLeft.png')
+                }))
+                break;
+            case ']':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/capRight.png')
+                }))
+                break;
+            case '_':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeConnectorTop.png')
+                }))
+                break;
+            case 'u':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/capBottom.png')
+                }))
+                break;
+            case '/':
+                BOUNDARIES.push(new Boundary({
+                    position:{
+                        x:Boundary.width*j,
+                        y:Boundary.height*i
+                    },
+                    image: createImage('./img/pipeConnectorBottom.png')
                 }))
                 break;
         }
@@ -95,6 +241,8 @@ function circleCollidesWithRectangle({circle, rectangle}) {
         circle.position.y + circle.radius + circle.velocity.y >= rectangle.position.y && 
         circle.position.x - circle.radius + circle.velocity.x <= rectangle.position.x + rectangle.width);
 }
+
+let lastKey = '';
 
 function animate(){
     requestAnimationFrame(animate);
@@ -173,17 +321,12 @@ function animate(){
             circle:PLAYER,
             rectangle: Boundary
         })) {
-            console.log('aaa');
-
             PLAYER.velocity.x = 0;
             PLAYER.velocity.y = 0;
         }
     });
     
     PLAYER.update();
-
-    // PLAYER.velocity.x = 0;
-    // PLAYER.velocity.y = 0;
 }
 
 animate();
