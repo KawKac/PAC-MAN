@@ -3,8 +3,11 @@ const CTX = CANVAS.getContext('2d');
 
 const SCOREEL = document.querySelector('#scoreEl');
 
-CANVAS.width = 21 * 40; //innerWidth - innerWidth/10;
-CANVAS.height = 14 * 40; //innerHeight - innerHeight/10;
+//ilość kafelków * szerokość px
+CANVAS.width = 21 * 40; 
+CANVAS.height = 14 * 40;
+
+const COLORS = ["red", "blue", "orange", "purple", "pink", "turquoise", "magenta", "lime", "cyan", "maroon", "navy", "teal", "indigo", "coral"];
 
 class Boundary {
     static width = 40;
@@ -60,7 +63,7 @@ class Player {
 class Ghost {
     static speed = 2;
 
-    constructor({position, velocity, color = 'red'}) {
+    constructor({position, velocity, color = COLORS[Math.floor(Math.random() * COLORS.length)] }) {
         this.position = position;
         this.velocity = velocity;
         this.radius = 15;
@@ -71,11 +74,52 @@ class Ghost {
     }
 
     draw() {
+        const size = 30; // Rozmiar ducha
+
+        // Rysowanie ciała ducha
         CTX.beginPath();
-        CTX.arc(this.position.x, this.position.y, this.radius, 0, Math.PI*2);
+        CTX.arc(this.position.x, this.position.y, size/2, 0, Math.PI*2);
         CTX.fillStyle = this.scared? 'grey' : this.color;
         CTX.fill();
         CTX.closePath();
+
+        // Rysowanie oczu ducha
+        const eyeSize = size/5;
+        CTX.beginPath();
+        CTX.arc(this.position.x - eyeSize, this.position.y - eyeSize, eyeSize, 0, Math.PI * 2);
+        CTX.arc(this.position.x + eyeSize, this.position.y - eyeSize, eyeSize, 0, Math.PI * 2);
+        CTX.fillStyle = 'white';
+        CTX.fill();
+        CTX.closePath();
+
+        // Rysowanie źrenic ducha
+        const pupilSize = size/10;
+        CTX.beginPath();
+        CTX.arc(this.position.x - eyeSize, this.position.y - eyeSize, pupilSize, 0, Math.PI * 2);
+        CTX.arc(this.position.x + eyeSize, this.position.y - eyeSize, pupilSize, 0, Math.PI * 2);
+        CTX.fillStyle = 'black';
+        CTX.fill();
+        CTX.closePath();
+
+        // Rysowanie ust ducha
+        if (this.scared) {
+            // Jeśli duch jest przestraszony, rysujemy usta jako okrąg
+            CTX.beginPath();
+            CTX.arc(this.position.x, this.position.y + size/4, size/6, 0, Math.PI * 2, false);
+            CTX.fillStyle = 'black';
+            CTX.fill();
+            CTX.closePath();
+        } else {
+            // W przeciwnym przypadku, rysujemy usta jako linię prostą
+            const mouthWidth = size/2;
+            CTX.beginPath();
+            CTX.moveTo(this.position.x - mouthWidth/2, this.position.y + size/4);
+            CTX.lineTo(this.position.x + mouthWidth/2, this.position.y + size/4);
+            CTX.lineWidth = size/10;
+            CTX.strokeStyle = 'black';
+            CTX.stroke();
+            CTX.closePath();
+        }
     }
 
     update() {
@@ -115,6 +159,36 @@ class PowerUp {
     }
 }
 
+const GAME_MUSIC = new Audio("./music/game.mp3");
+GAME_MUSIC.loop = true;
+GAME_MUSIC.autoplay = true;
+GAME_MUSIC.volume = 0.5;
+
+const GHOST_KILL_MUSIC = new Audio("./music/ghostkill.mp3");
+GHOST_KILL_MUSIC.loop = false;
+GHOST_KILL_MUSIC.autoplay = true;
+
+const LOSE_MUSIC = new Audio("./music/lose.mp3");
+LOSE_MUSIC.loop = false;
+LOSE_MUSIC.autoplay = true;
+
+const PELLET_SOUND = new Audio("./music/pellet.mp3");
+PELLET_SOUND.loop = false;
+PELLET_SOUND.autoplay = true;
+
+const POWER_UP_SOUND = new Audio("./music/powerup.mp3");
+POWER_UP_SOUND.loop = false;
+POWER_UP_SOUND.autoplay = true;
+
+const WINNER_SOUND = new Audio("./music/win.mp3");
+WINNER_SOUND.loop = false;
+WINNER_SOUND.autoplay = true;
+
+const PLAY_BUTTON = new Audio("./music/playbutton.mp3");
+PLAY_BUTTON.loop = false;
+PLAY_BUTTON.autoplay = false;
+PLAY_BUTTON.volume = 0.75;
+
 const PELLETS = [];
 const BOUNDARIES = [];
 const POWERUPS = [];
@@ -138,7 +212,6 @@ const GHOSTS = [
             x: Ghost.speed,
             y: 0
         },
-        color: 'pink'
     }),
     new Ghost({
         position: {
@@ -149,7 +222,6 @@ const GHOSTS = [
             x: Ghost.speed,
             y: 0
         },
-        color: 'orange'
     })
 ];
 const PLAYER = new Player({
@@ -379,10 +451,53 @@ let lastKey = '';
 let score = 0;
 let animationId;
 
+function finish_game(win) {
+    animationId = requestAnimationFrame(animate);
+
+    CANVAS.parentNode.removeChild(CANVAS);
+
+    SCOREEL.parentNode.style.display = 'none';
+
+    const newCanvas = document.createElement('canvas');
+    const newCTX = newCanvas.getContext('2d');
+    newCanvas.width = 21 * 40;
+    newCanvas.height = 14 * 40;
+
+    document.body.appendChild(newCanvas);
+
+    newCTX.font = '48px "Press Start 2P", "Press Start", cursive';
+    newCTX.textAlign = 'center';
+    newCTX.fillStyle = 'white';
+
+    if(win) {
+        newCTX.fillText('Wygrałeś!', newCanvas.width/2, (newCanvas.height/6)*2);
+        newCTX.fillText('Twój wynik to:', newCanvas.width/2, (newCanvas.height/6)*4);
+        newCTX.fillText(score, newCanvas.width/2, (newCanvas.height/6)*5);
+    } else {
+        newCTX.fillText('Przegrałeś!', newCanvas.width/2, (newCanvas.height/6)*2);
+        newCTX.fillText('Twój wynik to:', newCanvas.width/2, (newCanvas.height/6)*4);
+        newCTX.fillText(score, newCanvas.width/2, (newCanvas.height/6)*5);
+    }
+    cancelAnimationFrame(animationId);
+
+    const button = document.createElement('url');
+    button.setAttribute("class","pgb");
+    button.setAttribute("id","restart_button");
+    button.setAttribute("onclick","refresh()");
+    button.setAttribute("href","");
+    document.body.appendChild(document.createElement('br'));
+    document.body.appendChild(button);
+    button.innerHTML = "↻";
+}
+
+function refresh() {
+    window.location.reload();
+}
+
 function animate(){
     animationId = requestAnimationFrame(animate);
 
-    CTX.clearRect(0,0,CANVAS.width,CANVAS.height);
+    CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
 
     if(KEYS.w.pressed && lastKey === 'w') {
         for(let i = 0; i<BOUNDARIES.length; i++) {
@@ -457,6 +572,9 @@ function animate(){
                 ghost.position.y - PLAYER.position.y
             ) < ghost.radius + PLAYER.radius) {
                 if(ghost.scared){
+                    GHOST_KILL_MUSIC.pause();
+                    GHOST_KILL_MUSIC.currentTime = 0;
+                    GHOST_KILL_MUSIC.play();
                     GHOSTS.splice(i, 1);
                     score += 100;
                     SCOREEL.innerHTML = score;
@@ -509,15 +627,19 @@ function animate(){
                         }
                     }, 5000);
                 } else {
+                    GAME_MUSIC.pause();
+                    LOSE_MUSIC.play();
                     cancelAnimationFrame(animationId);
-                    alert('Przegrałeś');
+                    finish_game(false);
                 }
             }
     }
 
     if (PELLETS.length === 0) {
+        GAME_MUSIC.pause();
+        WINNER_SOUND.play();
         cancelAnimationFrame(animationId);
-        alert('Wygrałeś!');
+        finish_game(true);
     }
 
     for(let i = POWERUPS.length - 1; 0 <= i; i--) {
@@ -530,6 +652,9 @@ function animate(){
                 powerUp.position.y - PLAYER.position.y
             ) < powerUp.radius + PLAYER.radius) {
                 POWERUPS.splice(i, 1);
+                POWER_UP_SOUND.pause();
+                POWER_UP_SOUND.currentTime = 0;
+                POWER_UP_SOUND.play();
                 GHOSTS.forEach(ghost => {
                     ghost.scared = true;
                     setTimeout(() => {
@@ -551,6 +676,9 @@ function animate(){
                 pellet.position.y - PLAYER.position.y
             ) < pellet.radius + PLAYER.radius) {
                 PELLETS.splice(i, 1);
+                PELLET_SOUND.pause();
+                PELLET_SOUND.currentTime = 0;
+                PELLET_SOUND.play();
                 score += 10;
                 SCOREEL.innerHTML = score;
             }
@@ -660,27 +788,47 @@ function animate(){
     else if (PLAYER.velocity.x < 0 ) PLAYER.rotation = Math.PI;
     else if (PLAYER.velocity.y > 0 ) PLAYER.rotation = Math.PI / 2;
     else if (PLAYER.velocity.y < 0 ) PLAYER.rotation = Math.PI * 1.5;
-
-
 }
 
-animate();
+function play_game() {
+    PLAY_BUTTON.play();
+    const uiElement = document.getElementsByClassName("ui")[0];
+    uiElement.classList.add('fade-out');
+    setTimeout(() => {
+        uiElement.parentNode.removeChild(uiElement);
+        GAME_MUSIC.play();
+        document.getElementsByClassName("score")[0].style.visibility = "visible";
+        animate();
+    }, 1500);
+}
 
 window.addEventListener('keydown', ({key}) => {
     switch(key){
         case 'w':
+        case 'W':
+        case '8':
+        case 'ArrowUp':
             KEYS.w.pressed = true;
             lastKey = 'w';
             break
         case 'a':
+        case 'A':
+        case '4':
+        case 'ArrowLeft':
             KEYS.a.pressed = true;
             lastKey = 'a';
             break;
         case 's':
+        case 'S':
+        case '2':
+        case 'ArrowDown':
             KEYS.s.pressed = true;
             lastKey = 's';
             break;
         case 'd':
+        case 'D':
+        case '6':
+        case 'ArrowRight':
             KEYS.d.pressed = true;
             lastKey = 'd';
             break;
@@ -690,15 +838,27 @@ window.addEventListener('keydown', ({key}) => {
 window.addEventListener('keyup', ({key}) => {
     switch(key){
         case 'w':
+        case 'W':
+        case '8':
+        case 'ArrowUp':   
             KEYS.w.pressed = false;
             break
         case 'a':
+        case 'A':
+        case '4':
+        case 'ArrowLeft':
             KEYS.a.pressed = false;
             break;
         case 's':
+        case 'S':
+        case '2':
+        case 'ArrowDown':
             KEYS.s.pressed = false;
             break;
         case 'd':
+        case 'D':
+        case '6':
+        case 'ArrowRight':
             KEYS.d.pressed = false;
             break;
     }
