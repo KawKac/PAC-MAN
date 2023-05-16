@@ -26,20 +26,34 @@ class Player {
         this.position = position;
         this.velocity = velocity;
         this.radius = 15;
+        this.radians = 0.75;
+        this.openRate = 0.12;
+        this.rotation = 0;
     }
 
     draw() {
+        CTX.save();
+        CTX.translate(this.position.x, this.position.y);
+        CTX.rotate(this.rotation);
+        CTX.translate(-this.position.x, -this.position.y);
         CTX.beginPath();
-        CTX.arc(this.position.x,this.position.y, this.radius, 0, Math.PI*2);
+        CTX.arc(this.position.x,this.position.y, this.radius, this.radians, Math.PI*2 - this.radians);
+        CTX.lineTo(this.position.x, this.position.y);
         CTX.fillStyle = 'yellow';
         CTX.fill();
         CTX.closePath();
+        CTX.restore();
     }
 
     update() {
         this.draw();
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
+
+        if(this.radians < 0 || this.radians > 0.75)
+            this.openRate *= (-1);
+
+        this.radians += this.openRate;
     }
 }
 
@@ -95,7 +109,7 @@ class PowerUp {
     draw() {
         CTX.beginPath();
         CTX.arc(this.position.x,this.position.y, this.radius, 0, Math.PI*2);
-        CTX.fillStyle = 'aquamarine';
+        CTX.fillStyle = 'green';
         CTX.fill();
         CTX.closePath();
     }
@@ -170,7 +184,7 @@ const MAP = [
     ['|','.','.','.','|','.','.','.','.','.','|','.','4',']','.','[','_','-','2','.','|'],
     ['|','.','[','-','+',']','.','[',']','.','u','.','.','.','.','.','.','.','u','.','|'],
     ['|','.','.','.','u','.','.','.','.','.','.','.','^','.','b','.','^','.','.','.','|'],
-    ['|','.','b','.','.','.','1',']','.','b','.','[','6','.','.','.','4',']','.','[','6'],
+    ['|','.','b','.','.','.','1',']','.','b','c','[','6','.','.','.','4',']','.','[','6'],
     ['|','.','.','.','^','.','u','.','.','.','.','.','|','.','b','.','.','.','.','.','|'],
     ['|','.','^','.','|','.','.','.','^','.','^','.','|','.','.','.','^','.','^','.','|'],
     ['|','.','u','.','|','.','b','.','u','.','|','.','u','.','^','.','u','.','u','.','|'],
@@ -446,12 +460,66 @@ function animate(){
                     GHOSTS.splice(i, 1);
                     score += 100;
                     SCOREEL.innerHTML = score;
+                    setTimeout(() => {
+                        switch (i) {
+                            case 0:
+                                GHOSTS.push(
+                                    new Ghost({
+                                        position: {
+                                            x: Boundary.width * 10 + Boundary.width / 2, 
+                                            y: Boundary.height * 6 + Boundary.height / 2
+                                        },
+                                        velocity: {
+                                            x: 0,
+                                            y: Ghost.speed
+                                        }
+                                    })
+                                );
+                                break;
+                            case 1:
+                                GHOSTS.push(
+                                    new Ghost({
+                                        position: {
+                                            x: Boundary.width * 10 + Boundary.width / 2, 
+                                            y: Boundary.height * 6 + Boundary.height / 2
+                                        },
+                                        velocity: {
+                                            x: 0,
+                                            y: Ghost.speed
+                                        },
+                                        color: 'pink'
+                                    })
+                                );
+                                break;
+                            case 2:
+                                GHOSTS.push(
+                                    new Ghost({
+                                        position: {
+                                            x: Boundary.width * 10 + Boundary.width / 2, 
+                                            y: Boundary.height * 6 + Boundary.height / 2
+                                        },
+                                        velocity: {
+                                            x: 0,
+                                            y: Ghost.speed
+                                        },
+                                        color: 'orange'
+                                    })
+                                );
+                                break;
+                        }
+                    }, 5000);
                 } else {
                     cancelAnimationFrame(animationId);
-                    alert('you lose');
+                    alert('Przegrałeś');
                 }
             }
     }
+
+    if (PELLETS.length === 0) {
+        cancelAnimationFrame(animationId);
+        alert('Wygrałeś!');
+    }
+
     for(let i = POWERUPS.length - 1; 0 <= i; i--) {
         const powerUp = POWERUPS[i];
         powerUp.draw();
@@ -464,10 +532,8 @@ function animate(){
                 POWERUPS.splice(i, 1);
                 GHOSTS.forEach(ghost => {
                     ghost.scared = true;
-                    console.log(ghost.scared);
                     setTimeout(() => {
                         ghost.scared = false;
-                        console.log(ghost.scared);
                     }, 5000);
                 })
             }
@@ -558,24 +624,15 @@ function animate(){
             ghost.prevCollisions = COLLISIONS;
 
         if (JSON.stringify(COLLISIONS) !== JSON.stringify(ghost.prevCollisions)) {
-            // console.log('go go');
-
             if(ghost.velocity.x > 0) ghost.prevCollisions.push('right');
             else if(ghost.velocity.x < 0) ghost.prevCollisions.push('left');
             else if(ghost.velocity.y < 0) ghost.prevCollisions.push('up');
             else if(ghost.velocity.y > 0) ghost.prevCollisions.push('down');
 
-            console.log(COLLISIONS);
-            console.log(ghost.prevCollisions);
-
             const PATHWAYS = ghost.prevCollisions.filter(collision => {
                 return !COLLISIONS.includes(collision);
             })
-            console.log({PATHWAYS});
-
             const DIRECTION = PATHWAYS[Math.floor(Math.random() * PATHWAYS.length)];
-
-            console.log({DIRECTION});
 
             switch (DIRECTION) {
                 case 'down':
@@ -597,8 +654,14 @@ function animate(){
             }
             ghost.prevCollisions = [];
         }
-        // console.log(COLLISIONS);
     }))
+
+    if (PLAYER.velocity.x > 0 ) PLAYER.rotation = 0;
+    else if (PLAYER.velocity.x < 0 ) PLAYER.rotation = Math.PI;
+    else if (PLAYER.velocity.y > 0 ) PLAYER.rotation = Math.PI / 2;
+    else if (PLAYER.velocity.y < 0 ) PLAYER.rotation = Math.PI * 1.5;
+
+
 }
 
 animate();
