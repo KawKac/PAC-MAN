@@ -15,7 +15,7 @@ class Boundary {
     }
 
     draw() {
-        CTX.drawImage(this.image, this.position.x, this.position.y)
+        CTX.drawImage(this.image, this.position.x, this.position.y);
     }
 }
 
@@ -41,6 +41,22 @@ class Player {
     }
 }
 
+class Pellet {
+    constructor({position}) {
+        this.position = position;
+        this.radius = 3;
+    }
+
+    draw() {
+        CTX.beginPath();
+        CTX.arc(this.position.x,this.position.y, this.radius, 0, Math.PI*2);
+        CTX.fillStyle = 'white';
+        CTX.fill();
+        CTX.closePath();
+    }
+}
+
+const PELLETS = [];
 const BOUNDARIES = [];
 const PLAYER = new Player({position: {
     x: Boundary.width + Boundary.width / 2, 
@@ -231,6 +247,14 @@ MAP.forEach((row, i) => {
                     image: createImage('./img/pipeConnectorBottom.png')
                 }))
                 break;
+            case '.':
+                PELLETS.push(new Pellet({
+                    position:{
+                        x:Boundary.width * j + Boundary.width/2,
+                        y:Boundary.height * i + Boundary.height/2
+                    }
+                }))
+                break;
         }
     })
 });
@@ -313,6 +337,20 @@ function animate(){
             } else { PLAYER.velocity.x = 5; }
         }
     }
+
+    for(let i = PELLETS.length - 1; 0 < i; i--) {
+        const pellet = PELLETS[i]
+
+        pellet.draw();
+
+        if (
+            Math.hypot(
+                pellet.position.x - PLAYER.position.x,
+                pellet.position.y - PLAYER.position.y
+            ) < pellet.radius + PLAYER.radius) {
+                PELLETS.splice(i, 1);
+            }
+    };
 
     BOUNDARIES.forEach((Boundary) => {
         Boundary.draw();
