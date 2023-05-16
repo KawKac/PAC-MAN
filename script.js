@@ -65,11 +65,13 @@ const KEYS = {
 let lastKey = '';
 
 const MAP = [
-    ['-','-','-','-','-','-'],
-    ['-',' ',' ',' ',' ','-'],
-    ['-',' ','-','-',' ','-'],
-    ['-',' ',' ',' ',' ','-'],
-    ['-','-','-','-','-','-']
+    ['-','-','-','-','-','-','-'],
+    ['-',' ',' ',' ',' ',' ','-'],
+    ['-',' ','-',' ','-',' ','-'],
+    ['-',' ',' ',' ',' ',' ','-'],
+    ['-',' ','-',' ','-',' ','-'],
+    ['-',' ',' ',' ',' ',' ','-'],
+    ['-','-','-','-','-','-','-']
 ];
 
 MAP.forEach((row, i) => {
@@ -87,24 +89,101 @@ MAP.forEach((row, i) => {
     })
 });
 
+function circleCollidesWithRectangle({circle, rectangle}) {
+    return (circle.position.y - circle.radius + circle.velocity.y <= rectangle.position.y + rectangle.height && 
+        circle.position.x + circle.radius + circle.velocity.x >= rectangle.position.x && 
+        circle.position.y + circle.radius + circle.velocity.y >= rectangle.position.y && 
+        circle.position.x - circle.radius + circle.velocity.x <= rectangle.position.x + rectangle.width);
+}
+
 function animate(){
     requestAnimationFrame(animate);
 
     CTX.clearRect(0,0,CANVAS.width,CANVAS.height);
 
+    if(KEYS.w.pressed && lastKey === 'w') {
+        for(let i = 0; i<BOUNDARIES.length; i++) {
+            const BOUNDARY = BOUNDARIES[i]; 
+            if (circleCollidesWithRectangle({
+                circle: {...PLAYER, 
+                    velocity: {
+                        x: 0,
+                        y: -5
+                }},
+                rectangle: BOUNDARY
+            })) {
+                PLAYER.velocity.y = 0;
+                break;
+            } else { PLAYER.velocity.y = -5; }
+        }
+    }
+    else if (KEYS.a.pressed && lastKey === 'a') {
+        for(let i = 0; i<BOUNDARIES.length; i++) {
+            const BOUNDARY = BOUNDARIES[i]; 
+            if (circleCollidesWithRectangle({
+                circle: {...PLAYER, 
+                    velocity: {
+                        x: -5,
+                        y: 0
+                }},
+                rectangle: BOUNDARY
+            })) {
+                PLAYER.velocity.x = 0;
+                break;
+            } else { PLAYER.velocity.x = -5; }
+        }
+    }
+    else if (KEYS.s.pressed && lastKey === 's') {
+        for(let i = 0; i<BOUNDARIES.length; i++) {
+            const BOUNDARY = BOUNDARIES[i]; 
+            if (circleCollidesWithRectangle({
+                circle: {...PLAYER, 
+                    velocity: {
+                        x: 0,
+                        y: 5
+                }},
+                rectangle: BOUNDARY
+            })) {
+                PLAYER.velocity.y = 0;
+                break;
+            } else { PLAYER.velocity.y = 5; }
+        }
+    }
+    else if (KEYS.d.pressed && lastKey === 'd') {
+        for(let i = 0; i<BOUNDARIES.length; i++) {
+            const BOUNDARY = BOUNDARIES[i]; 
+            if (circleCollidesWithRectangle({
+                circle: {...PLAYER, 
+                    velocity: {
+                        x: 5,
+                        y: 0
+                }},
+                rectangle: BOUNDARY
+            })) {
+                PLAYER.velocity.x = 0;
+                break;
+            } else { PLAYER.velocity.x = 5; }
+        }
+    }
+
     BOUNDARIES.forEach((Boundary) => {
         Boundary.draw();
+
+        if (circleCollidesWithRectangle({
+            circle:PLAYER,
+            rectangle: Boundary
+        })) {
+            console.log('aaa');
+
+            PLAYER.velocity.x = 0;
+            PLAYER.velocity.y = 0;
+        }
     });
     
     PLAYER.update();
 
-    PLAYER.velocity.x = 0;
-    PLAYER.velocity.y = 0;
-
-    if(KEYS.w.pressed && lastKey === 'w') PLAYER.velocity.y = -5;
-    else if (KEYS.a.pressed && lastKey === 'a') PLAYER.velocity.x = -5;
-    else if (KEYS.s.pressed && lastKey === 's') PLAYER.velocity.y = 5;
-    else if (KEYS.d.pressed && lastKey === 'd') PLAYER.velocity.x = 5;
+    // PLAYER.velocity.x = 0;
+    // PLAYER.velocity.y = 0;
 }
 
 animate();
