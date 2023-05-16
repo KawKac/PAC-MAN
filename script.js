@@ -579,52 +579,18 @@ function animate(){
                     score += 100;
                     SCOREEL.innerHTML = score;
                     setTimeout(() => {
-                        switch (i) {
-                            case 0:
-                                GHOSTS.push(
-                                    new Ghost({
-                                        position: {
-                                            x: Boundary.width * 10 + Boundary.width / 2, 
-                                            y: Boundary.height * 6 + Boundary.height / 2
-                                        },
-                                        velocity: {
-                                            x: 0,
-                                            y: Ghost.speed
-                                        }
-                                    })
-                                );
-                                break;
-                            case 1:
-                                GHOSTS.push(
-                                    new Ghost({
-                                        position: {
-                                            x: Boundary.width * 10 + Boundary.width / 2, 
-                                            y: Boundary.height * 6 + Boundary.height / 2
-                                        },
-                                        velocity: {
-                                            x: 0,
-                                            y: Ghost.speed
-                                        },
-                                        color: 'pink'
-                                    })
-                                );
-                                break;
-                            case 2:
-                                GHOSTS.push(
-                                    new Ghost({
-                                        position: {
-                                            x: Boundary.width * 10 + Boundary.width / 2, 
-                                            y: Boundary.height * 6 + Boundary.height / 2
-                                        },
-                                        velocity: {
-                                            x: 0,
-                                            y: Ghost.speed
-                                        },
-                                        color: 'orange'
-                                    })
-                                );
-                                break;
-                        }
+                        GHOSTS.push(
+                            new Ghost({
+                                position: {
+                                    x: Boundary.width * 10 + Boundary.width / 2, 
+                                    y: Boundary.height * 6 + Boundary.height / 2
+                                },
+                                velocity: {
+                                    x: 0,
+                                    y: Ghost.speed
+                                }
+                            })
+                        );
                     }, 5000);
                 } else {
                     GAME_MUSIC.pause();
